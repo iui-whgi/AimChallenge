@@ -9,6 +9,46 @@ nlu:
 #처음 주문할 때 주문하는 예상 질문지
   - intent: order_coffee
     examples: |
+      - [카페라떼](drink_type) 주세요
+      - [카페라떼](drink_type) [한](quantity)잔 주세요
+      - [아이스](temperature) [카페라떼](drink_type) [라지](size) [한](quantity)잔 주세요
+      - [카페라떼](drink_type)에 [휘핑크림]("entity": "additional_options", "role": "order") 추가해주세요
+      - [카페라떼](drink_type)에 [샷]("entity": "additional_options", "role": "order") 추가해주세요
+      - [카페라떼](drink_type)에 [휘핑크림]("entity": "additional_options", "role": "order")이랑 [샷]("entity": "additional_options", "role": "order") 추가해주세요
+      - [아이스](temperature) [카페라떼](drink_type) [휘핑크림]("entity": "additional_options", "role": "order") 추가해서 주세요
+      - [핫](temperature) [카페라떼](drink_type) [샷]("entity": "additional_options", "role": "order") 추가해주세요
+      - [카페라떼](drink_type) [라지](size)로 [휘핑크림]("entity": "additional_options", "role": "order") 올려주세요
+      - [아이스](temperature) [카페라떼](drink_type) [미디움](size) [샷]("entity": "additional_options", "role": "order") 추가해서 [두](quantity)잔 주세요
+      - [카페라떼](drink_type)에 [휘핑크림]("entity": "additional_options", "role": "order") 얹어주시고 [샷]("entity": "additional_options", "role": "order") 한 번 더 넣어주세요
+      - [아이스](temperature) [카페라떼](drink_type) [휘핑크림]("entity": "additional_options", "role": "order") 추가하고 [샷]("entity": "additional_options", "role": "order") 더블로 해주세요
+      - [카페라떼](drink_type) [엑스트라 샷]("entity": "additional_options", "role": "order")으로 만들어주세요
+      - [핫](temperature) [카페라떼](drink_type) [휘핑크림]("entity": "additional_options", "role": "order") 듬뿍 올려주세요
+      - [카페라떼](drink_type) [휘핑크림]("entity": "additional_options", "role": "order") 추가하고 [샷]("entity": "additional_options", "role": "order") 한 번 더 넣어서 [벤티](size) 사이즈로 주세요
+      - [아이스](temperature) [카페라떼](drink_type) [휘핑크림]("entity": "additional_options", "role": "order") 추가하고 [샷]("entity": "additional_options", "role": "order") 두 번 넣어주세요
+      - [카페라떼](drink_type) [휘핑크림]("entity": "additional_options", "role": "order")이랑 [샷]("entity": "additional_options", "role": "order") 추가해서 [세](quantity)잔 만들어주세요
+      - [따뜻한](temperature) [카페라떼](drink_type)에 [휘핑크림]("entity": "additional_options", "role": "order") 올리고 [샷]("entity": "additional_options", "role": "order") 추가해주세요
+      - [카페라떼](drink_type) [grande](size) 사이즈로 [휘핑크림]("entity": "additional_options", "role": "order") 추가하고 [샷]("entity": "additional_options", "role": "order") 한 번 더 넣어주세요
+      - [똬](drink_type) 주세요
+      - [똬](drink_type) [한](quantity)잔 주세요
+      - [아이스](temperature) [똬](drink_type) [라지](size) [한](quantity)잔 주세요
+      - [아이스](temperature) [똬](drink_type) [라지](size) [한](quantity)잔 [아이스](temperature) [카페라떼](drink_type) [라지](size) [한](quantity)잔 주세요
+      - [아이스](temperature) [똬](drink_type) [라지](size) [한](quantity)잔, [아이스](temperature) [카페라떼](drink_type) [라지](size) [한](quantity)잔 주세요
+      - [아이스](temperature) [똬](drink_type) [라지](size) [한](quantity)잔이랑 [아이스](temperature) [카페라떼](drink_type) [라지](size) [한](quantity)잔 주세요
+      - [아이스](temperature) [똬](drink_type) [라지](size) [한](quantity)잔주시고 [아이스](temperature) [카페라떼](drink_type) [라지](size) [한](quantity)잔 주세요
+      - [아이스](temperature) [똬](drink_type) [엑스라지](size) [한](quantity)잔 주세요
+      - [똬](drink_type) [미디움](size) [한](quantity)잔 주세요
+      - [똬](drink_type) [세](quantity)잔 주세요
+      - [똬](drink_type) [샷]("entity": "additional_options", "role": "order") 추가해서 주세요
+      - [아이스](temperature) [똬](drink_type) [라지](size) [한](quantity)잔에 [휘핑크림]("entity": "additional_options", "role": "order") 추가해서 주세요
+      - [핫](temperature) [똬](drink_type) [두](quantity)잔 주세요
+      - [아이스](temperature) [똬](drink_type) [샷]("entity": "additional_options", "role": "order") 추가해서 주세요
+      - [똬](drink_type) [라지](size) [한](quantity)잔 주세요
+      - [똬](drink_type) [엑스라지](size) [샷]("entity": "additional_options", "role": "order") 추가해서 주세요
+      - [똬](drink_type) [두](quantity)잔 [샷]("entity": "additional_options", "role": "order") 추가해서 주세요
+      - [아이스](temperature) [똬](drink_type) [미디움](size) [네](quantity)잔 주세요
+      - [아이스](temperature) [똬](drink_type) [엑스라지](size) [샷]("entity": "additional_options", "role": "order") 추가해서 주세요
+      - [핫](temperature) [똬](drink_type) [세](quantity)잔 [샷]("entity": "additional_options", "role": "order") 추가해서 주세요
+      - [똬](drink_type) [라지](size) [세](quantity)잔 [샷]("entity": "additional_options", "role": "order") 추가해서 주세요
       - [똬](drink_type) 주세요
       - [똬](drink_type) [한](quantity)잔 주세요
       - [아이스](temperature) [아메리카노](drink_type) [라지](size) [한](quantity)잔 주세요
@@ -3026,6 +3066,7 @@ nlu:
       - 카라멜\s*시로
 
 entities:
+  - drink_type
   - quantity
   - size
   - temperature
