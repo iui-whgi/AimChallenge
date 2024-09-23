@@ -5,6 +5,13 @@ nlu:
     examples: |
       - 변경
       - 전환
+  
+  - intent: change_temperature
+    examples: |
+      - 아이스 아메리카노 뜨겁게 한잔 주세요
+      - 아아 뜨겁게 한잔 주세요
+      - 차가운 아메리카노 따뜻하게 주세요
+      - 따뜻한 아이스 아메리카노 주세요.
 
 #처음 주문할 때 주문하는 예상 질문지
   - intent: order_coffee
@@ -858,6 +865,7 @@ nlu:
       - [토마토소스](drink_type) [한](quantity)잔 주문할게요
       - [초콜릿대](drink_type) [한](quantity)잔 주문할게요
       - [바닐라떼](drink_type) [엑스라지](size) [한](quantity)잔 주문할게요
+    
 
 #주문을 하고나서 주문을 바꿀 때 변경하는 예상 질문지(~로 바꿔주세요[기존주문 초기화 후 새로 받기], ~ 대신 ~로 바꿔주세요[기존 음료를 다른 음료로 전환], ~ 말고 ~로 바꿔주세요[기존 음료를 다른 음료로 전환])
   - intent: modify_order

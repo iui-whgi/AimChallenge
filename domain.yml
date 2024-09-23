@@ -1,0 +1,148 @@
+version: "3.1"
+
+intents:
+  - order_coffee
+  - change_order
+  - greet
+  - goodbye
+  - inform
+  - order_drink
+  - modify_order
+  - cancel_order
+#  - add_order
+  - subtract_order
+  - check_order
+  - add_subtract_order
+  - select_size_order
+  - select_temperature_order
+  - additional_options_order
+  - coffee_recommend_order
+  - middle_check
+entities:
+  - drink_type
+  - quantity
+  - add
+  - subtract
+  - modify
+  - change
+  - size
+  - temperature
+  - additional_options
+  - subtract_options
+
+roles:
+  - order
+  - modify_option
+  - subtract_option
+
+slots:
+  drink_type:
+    type: list
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: drink_type
+  quantity:
+    type: list
+    mappings:
+      - type: from_entity
+        entity: quantity
+  size:
+    type: list
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: size
+  temperature:
+    type: list
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: temperature
+  add:
+    type: list
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: add
+  subtract:
+    type: list
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: subtract
+  modify:
+    type: list
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: modify
+  change:
+    type: list
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: change
+  order_options:
+    type: list
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: additional_options
+        role: order
+  modify_options:
+    type: list
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: additional_options
+        role: modify_option
+  subtract_options:
+    type: list
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: additional_options
+        role: subtract_option
+
+actions:
+  - SangJuFall
+  - utter_order_confirmation
+  - action_order_confirmation
+  - action_modify_order
+  - action_cancel_order
+  - utter_cancel_order
+#  - action_add_to_order
+  - action_subtract_from_order
+  - utter_add_order
+  - utter_subtract_order
+  - action_order_finish
+  - action_add_subtract
+  - action_coffee_recommendation
+  - action_select_coffee_size
+  - utter_utter_check
+  - action_select_coffee_temperature
+  - utter_ask_question
+  - action_addsub_additional_options
+responses:
+#   utter_order_confirmation:
+#   - text: "주문하신 음료는 {drink_type} {quantity}잔입니다. 주문이 맞는지 확인해주세요."
+#   utter_cancel_order:
+#   - text: "주문을 취소합니다. 취소된 음료는 {canceled_items}입니다."
+  utter_modify_order_confirmation:
+  - text: "주문이 수정되었습니다. 현재 주문은 {order_items}입니다."
+
+#   utter_add_order:
+#   - text: "음료를 추가하셨습니다. 현재 주문은 {add_items}입니다."
+#   utter_subtract_order:
+#   - text: "음료를 빼셨습니다. 현재 주문은 {subtract_items}입니다."
+
+  utter_ask_question:
+  - text: "추가 및 변경하실 사항을 자세히 알려주시겠어요?"
+  utter_utter_check:
+  - text: "주문을 인식하지 못하였습니다. 다시 주문해주세요."
+#    utter_ask_extra_options:
+#    - test: "옵션을 추가하시겠습니까? 샷 추가, 시럽 추가(바닐라, 카라멜 등), 휘핑 크림 추가 중에 선택할 수 있습니다."
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true

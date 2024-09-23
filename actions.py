@@ -48,7 +48,16 @@ class OrderManager:
         self.additional_option = {}  # 음료별 추가 옵션을 저장하는 딕셔너리
         self.hot_drinks = ["허브티"]  # 항상 핫으로만 제공되는 음료 리스트
         self.ice_only_drinks = ["토마토주스", "키위주스", "망고스무디", "딸기스무디", "레몬에이드", "복숭아아이스티"]  # 항상 아이스로만 제공되는 음료 리스트
-
+    def change_temperature_order(self):
+        drink_type = "아메리카노"
+        temperature = "핫"
+        quantity = 1
+        size = "미디움"  # 기본 사이즈 설정
+        
+        self.add_order(drink_type, quantity, temperature, size)
+        
+        return f"{temperature} {drink_type} {quantity}잔 주문이 추가되었습니다."
+    
     def add_order(self, drink_type, quantity, temperature=None, size=None, additional_options=None):
         drink_type = standardize_drink_name(drink_type)  # 음료 이름 표준화
         
@@ -576,6 +585,20 @@ def raise_missing_attribute_error(drinks):
     for drink in drinks:
         if not drink["drink_type"]:
             raise ValueError("정확한 음료의 종류를 말씀하여주세요.")
+        
+class ActionChangeTemperatureOrder(Action):
+    def name(self) -> Text:
+        return "action_change_temperature_order"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        
+        response = order_manager.change_temperature_order()
+        dispatcher.utter_message(text=response)
+        
+        return []
+
 
 # 주문
 class ActionOrderConfirmation(Action):
