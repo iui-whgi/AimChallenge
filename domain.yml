@@ -1,6 +1,7 @@
 version: "3.1"
 
 intents:
+  - change_temperature_order
   - order_coffee
   - change_order
   - greet
@@ -106,6 +107,7 @@ slots:
         role: subtract_option
 
 actions:
+  - action_change_temperature_order
   - SangJuFall
   - utter_order_confirmation
   - action_order_confirmation

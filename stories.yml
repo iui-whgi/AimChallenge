@@ -1,6 +1,19 @@
 version: "3.1"
 
 stories:
+- story: 온도 변경 주문
+  steps:
+  - intent: change_temperature_order
+    entities:
+      - drink_type: "아메리카노"
+      - temperature: "아이스"
+      - quantity: "한잔"
+  - action: action_change_temperature_order
+  - action: action_order_confirmation
+  - intent: middle_check
+  - action: utter_ask_question
+
+stories:
 - story: 아메리카노 주문
   steps:
   - intent: order_coffee
