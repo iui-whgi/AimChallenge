@@ -257,7 +257,88 @@ class OrderManager:
 
 order_manager = OrderManager()  # OrderManager 인스턴스 생성
 
-# 엔티티 매핑
+class ActionOrderConfirmation(Action):
+    def name(self) -> Text:
+        return "action_order_confirmation"
+
+    async def run(
+        self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]
+    ) -> List[Dict[Text, Any]]:
+        try:
+            # 최근 사용자 메시지에서 엔터티를 가져오기
+            entities = [entity for entity in tracker.latest_message.get("entities", []) if entity.get("extractor") != "DIETClassifier"]
+            
+            # '라떼' 엔티티 처리
+            latte_entities = [entity for entity in entities if entity.get("entity") == "drink_type" and entity.get("value") == "라떼"]
+            if latte_entities:
+                # '라떼'를 '카페라떼'로 변경
+                for entity in latte_entities:
+                    entity["value"] = "카페라떼"
+            
+            # drink_type 엔티티 중 value가 비어있지 않은 것의 개수 확인
+            non_empty_drink_types = sum(1 for entity in entities if entity.get("entity") == "drink_type" and entity.get("value") != "")
+            
+            logging.warning(f"non_empty_drink_types: {non_empty_drink_types}")
+            logging.warning(f"Entities after processing: {entities}")
+            
+            # 모든 drink_type의 value가 빈 문자열이거나 엔티티가 없는 경우
+            if non_empty_drink_types == 0:
+                # '카페라떼' 엔티티 추가
+                entities.append({"entity": "drink_type", "value": "카페라떼"})
+                logging.warning(f"Added 'caffe latte' entity: {entities}")
+            
+            user_text = tracker.latest_message.get("text", "")
+
+            if "사이즈 업" in user_text:
+                raise KeyError("size up")
+
+            # 엔티티를 위치 순서로 정렬
+            mapper = OrderMapper(entities)
+            temperatures, drink_types, sizes, quantities, additional_options = mapper.get_mapped_data()
+
+            logging.warning(f"주문 엔티티: {entities}")
+            logging.warning(f"온도, 커피, 사이즈, 잔 수, 옵션: {temperatures} {drink_types} {sizes} {quantities} {additional_options}")
+            
+            # 단일 주문 중복 제거
+            if quantities and len(quantities) > 0:
+                if max(quantities) == 1 and len(set(drink_types)) == 1:
+                    temperatures = list(set(temperatures))
+                    drink_types = list(set(drink_types))
+                    sizes = list(set(sizes))
+                    quantities = list(set(quantities))
+                    additional_options = list(set(additional_options))
+            else:
+                # quantities가 비어있는 경우 기본값 설정
+                quantities = [1] * len(drink_types)
+            
+            # 고정된 온도 음료 확인
+            hot_drinks = ["허브티"]
+            ice_only_drinks = ["토마토주스", "키위주스", "망고스무디", "딸기스무디", "레몬에이드", "복숭아아이스티"]
+
+            for i in range(len(drink_types)):
+                if drink_types[i] in hot_drinks and temperatures[i] != "핫":
+                    raise ValueError(f"{drink_types[i]}는(은) 온도를 변경하실 수 없습니다.")
+                if drink_types[i] in ice_only_drinks and temperatures[i] != "아이스":
+                    raise ValueError(f"{drink_types[i]}는(은) 온도를 변경하실 수 없습니다.")
+
+            raise_missing_attribute_error(mapper.drinks)  # 음료 속성 검증
+
+            if drink_types and quantities:
+                for i in range(len(drink_types)):
+                    order_manager.add_order(drink_types[i], quantities[i], temperatures[i], sizes[i], additional_options[i])
+            
+            logging.warning(f"drink type:{drink_types} quantities:{quantities} temperatures:{temperatures} sizes:{sizes} additional_order:{additional_options}")
+
+            confirmation_message = f"주문하신 음료는 {order_manager.get_order_summary()}입니다. 다른 추가 옵션이 필요하신가요?"
+            dispatcher.utter_message(text=confirmation_message)
+
+        except ValueError as e:
+            dispatcher.utter_message(text=str(e))
+        except Exception as e:
+            dispatcher.utter_message(text=f"주문 접수 중 오류가 발생했습니다: {str(e)}")
+        return []
+    
+
 class OrderMapper:
     def __init__(self, entities, is_temperature_change=False, is_size_change=False):
         self.entities = sorted(entities, key=lambda x: x['start'])
@@ -612,82 +693,7 @@ def raise_missing_attribute_error(drinks):
         if not drink["drink_type"]:
             raise ValueError("정확한 음료의 종류를 말씀하여주세요.")
 
-# 주문
-class ActionOrderConfirmation(Action):
-    def name(self) -> Text:
-        return "action_order_confirmation"
 
-    async def run(
-        self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]
-    ) -> List[Dict[Text, Any]]:
-        try:
-            # 최근 사용자 메시지에서 엔터티를 가져오기
-            entities = [entity for entity in tracker.latest_message.get("entities", []) if entity.get("extractor") != "DIETClassifier"]
-            
-            # '라떼' 엔티티 제거
-            entities = [entity for entity in entities if not (entity.get("entity") == "drink_type" and entity.get("value") == "라떼")]
-            
-            # drink_type 엔티티 중 value가 비어있지 않은 것의 개수 확인
-            non_empty_drink_types = sum(1 for entity in entities if entity.get("entity") == "drink_type" and entity.get("value") != "")
-            
-            logging.warning(f"non_empty_drink_types: {non_empty_drink_types}")
-            logging.warning(f"Entities after removing 'latte': {entities}")
-            
-            # 모든 drink_type의 value가 빈 문자열인 경우
-            if non_empty_drink_types == 0:
-                # value가 빈 문자열인 첫 번째 drink_type 엔티티를 찾아 '라떼'로 설정
-                for entity in entities:
-                    if entity.get("entity") == "drink_type" and entity.get("value") == "":
-                        entity["value"] = "라떼"
-                        break  # 첫 번째 빈 drink_type만 수정하고 루프 종료
-                logging.warning(f"Added 'latte' to empty drink_type: {entities}")
-            
-            user_text = tracker.latest_message.get("text", "")
-
-            if "사이즈 업" in user_text:
-                raise KeyError("size up")
-
-            # 엔티티를 위치 순서로 정렬
-            mapper = OrderMapper(entities)
-            temperatures, drink_types, sizes, quantities, additional_options = mapper.get_mapped_data()
-
-            logging.warning(f"주문 엔티티: {entities}")
-            logging.warning(f"온도, 커피, 사이즈, 잔 수, 옵션: {temperatures} {drink_types} {sizes} {quantities} {additional_options}")
-            
-            # 단일 주문 중복 제거 (기존 코드와 동일)
-            if max(quantities) == 1 and len(set(drink_types)) == 1:
-                temperatures = list(set(temperatures))
-                drink_types = list(set(drink_types))
-                sizes = list(set(sizes))
-                quantities = list(set(quantities))
-                additional_options = list(set(additional_options))
-            
-            # 고정된 온도 음료 확인 (기존 코드와 동일)
-            hot_drinks = ["허브티"]
-            ice_only_drinks = ["토마토주스", "키위주스", "망고스무디", "딸기스무디", "레몬에이드", "복숭아아이스티"]
-
-            for i in range(len(drink_types)):
-                if drink_types[i] in hot_drinks and temperatures[i] != "핫":
-                    raise ValueError(f"{drink_types[i]}는(은) 온도를 변경하실 수 없습니다.")
-                if drink_types[i] in ice_only_drinks and temperatures[i] != "아이스":
-                    raise ValueError(f"{drink_types[i]}는(은) 온도를 변경하실 수 없습니다.")
-
-            raise_missing_attribute_error(mapper.drinks)  # 음료 속성 검증
-
-            if drink_types and quantities:
-                for i in range(len(drink_types)):
-                    order_manager.add_order(drink_types[i], quantities[i], temperatures[i], sizes[i], additional_options[i])
-            
-            logging.warning(f"drink type:{drink_types} quantities:{quantities} temperatures:{temperatures} sizes:{sizes} additional_order:{additional_options}")
-
-            confirmation_message = f"주문하신 음료는 {order_manager.get_order_summary()}입니다. 다른 추가 옵션이 필요하신가요?"
-            dispatcher.utter_message(text=confirmation_message)
-
-        except ValueError as e:
-            dispatcher.utter_message(text=str(e))
-        except Exception as e:
-            dispatcher.utter_message(text=f"주문 접수 중 오류가 발생했습니다: {str(e)}")
-        return []
 
 # 주문 변경
 class ActionModifyOrder(Action):
