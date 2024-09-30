@@ -256,7 +256,6 @@ class OrderManager:
         return ", ".join(summary)
 
 order_manager = OrderManager()  # OrderManager 인스턴스 생성
-
 class ActionOrderConfirmation(Action):
     def name(self) -> Text:
         return "action_order_confirmation"
@@ -270,10 +269,15 @@ class ActionOrderConfirmation(Action):
             
             # '라떼' 엔티티 처리
             latte_entities = [entity for entity in entities if entity.get("entity") == "drink_type" and entity.get("value") == "라떼"]
-            if latte_entities:
-                # '라떼'를 '카페라떼'로 변경
+            other_drink_entities = [entity for entity in entities if entity.get("entity") == "drink_type" and entity.get("value") != "라떼"]
+            
+            if latte_entities and not other_drink_entities:
+                # '라떼'만 있고 다른 음료가 없는 경우에만 '카페라떼'로 변경
                 for entity in latte_entities:
                     entity["value"] = "카페라떼"
+            elif latte_entities and other_drink_entities:
+                # '라떼'와 다른 음료가 함께 있는 경우 '라떼' 엔티티 제거
+                entities = [entity for entity in entities if entity.get("value") != "라떼"]
             
             # drink_type 엔티티 중 value가 비어있지 않은 것의 개수 확인
             non_empty_drink_types = sum(1 for entity in entities if entity.get("entity") == "drink_type" and entity.get("value") != "")
@@ -337,7 +341,6 @@ class ActionOrderConfirmation(Action):
         except Exception as e:
             dispatcher.utter_message(text=f"주문 접수 중 오류가 발생했습니다: {str(e)}")
         return []
-    
 
 class OrderMapper:
     def __init__(self, entities, is_temperature_change=False, is_size_change=False):
