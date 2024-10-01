@@ -390,10 +390,16 @@ class OrderMapper:
                 if current_order['drink_type']:
                     self._complete_order(current_order)
                     current_order = self._initialize_order()
+                if entity['value'].lower() in ["복숭아아이st", "복숭아 아이st", "복숭아아이스티", "복숭아 아이스티"]:
+                    current_order['temperature'] = "아이스"
+                    current_order['drink_type'] = "복숭아 아이스티"
+                #elif entity['value'].lower() in ["아아", "아 아"]:
+                #    current_order['temperature'] = "아이스"
+                #    current_order['drink_type'] = "아메리카노"
                     
-                if entity['value'] in ["복숭아"]:
-                    current_order['temperature']="아이스"
-                    current_order['drink_type']="복숭아 아이스티"
+                #if entity['value'] in ["복숭아"]:
+                #    current_order['temperature']="아이스"
+                #    current_order['drink_type']="복숭아 아이스티"
                     
                 elif entity['value'] in ["아아", "아 아", "아", "아가"]:
                     current_order['temperature'] = "아이스"
@@ -680,7 +686,7 @@ def standardize_size(value):
 def standardize_option(value):
     if value in ["샤츠", "셔츠", "사추", "샤타나", "4추가"]:
         return "샷"
-    elif value in ["카라멜실업", "실룩실룩", "가라멜시럽", "카라멜시로"]:
+    elif value in ["카라멜실업", "실룩실룩", "가라멜시럽", "카라멜시로", "카라멜 시럽", "캐러멜 시럽", "캬라멜 시럽"]:
         return "카라멜시럽"
     elif value in ["바닐라실업"]:
         return "바닐라시럽"
@@ -960,7 +966,9 @@ class ActionAddSubtract(Action):
         elif entity['entity'] == 'size':
             order['size'] = standardize_size(entity['value'])
         elif entity['entity'] == 'additional_options':
-            order['additional_options'].append(standardize_option(entity['value']))
+            standardized_option = standardize_option(entity['value'])
+            if standardized_option not in order['additional_options']:
+                order['additional_options'].append(standardized_option)
 
     def _process_subtract(self, order, dispatcher):
         try:
@@ -993,24 +1001,44 @@ class ActionOrderFinish(Action):
         self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]
     ) -> List[Dict[Text, Any]]:
         try:
-            # 주문 데이터 확인
-            if not order_manager.get_orders():
-                # 주문이 없는 경우
-                dispatcher.utter_message(text="장바구니에 주문이 없습니다. 다시 주문해 주세요.")
-                return []
+            entities = [entity for entity in tracker.latest_message.get("entities", []) if entity.get("extractor") != "DIETClassifier"]
             
-            # 최종 주문 메시지 생성
-            final_message = f"주문이 완료되었습니다. 주문하신 음료는 {order_manager.get_default_order_summary()}입니다. 결제는 하단의 카드리더기로 결제해 주시기 바랍니다. 감사합니다."
-            dispatcher.utter_message(text=final_message)
+            mapper = OrderMapper(entities)
+            temperatures, drink_types, sizes, quantities, additional_options = mapper.get_mapped_data()
 
-            # 주문 완료 후 저장된 커피 데이터 초기화
-            order_manager.clear_order()
+            logging.warning(f"추가 옵션 변경 입력 내용: {entities}")
+            logging.warning(f"추가 옵션 변경 매핑 데이터: {temperatures, drink_types, sizes, quantities, additional_options}")
+
+            raise_missing_attribute_error(mapper.drinks)  # 음료 속성 검증
+
+            if not additional_options:
+                dispatcher.utter_message(text="추가할 새로운 옵션을 지정해주세요.")
+                return []
+
+            action = "remove" if "빼" in tracker.latest_message.get("text", "") else "add"
+
+            for i in range(len(drink_types)):
+                drink = drink_types[i]
+                quantity = quantities[i] if quantities[i] is not None else 1
+                temperature = temperatures[i] if i < len(temperatures) else "핫"
+                size = sizes[i] if i < len(sizes) else "미디움"
+                current_additional_option = additional_options[i] if i < len(additional_options) else None
+
+                logging.warning(f"현재 추가 옵션: {current_additional_option}")
+                logging.warning(f"order_manager 실행 직전: {drink, quantity, temperature, size, current_additional_option, action}")
+                
+                if action == "add":
+                    order_manager.Test_add_additional_options(drink, quantity, temperature, size, current_additional_option, action)
+                else:
+                    order_manager.Test_cancel_additional_options(drink, quantity, temperature, size, current_additional_option, action)
+
+            confirmation_message = f"말씀하신 옵션이 변경 되었습니다. 주문하신 음료는 {order_manager.get_order_summary()}입니다. 다른 추가 옵션이 필요하신가요?"
+            dispatcher.utter_message(text=confirmation_message)
 
             return []
         except Exception as e:
-            # 오류 발생 시 예외 처리
-            logging.exception("Exception occurred in action_order_finish")
-            dispatcher.utter_message(text="결제 중 오류가 발생했습니다. 다시 시도해주세요.")
+            logging.exception("Exception occurred in action_addsub_additional_options")
+            dispatcher.utter_message(text="주문 변경 중 오류가 발생했습니다. 다시 시도해주세요.")
             return []
 
 # 주문 취소
